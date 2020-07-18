@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Let's learn P5</title>
+        <script src="https://cdn.jsdelivr.net/npm/p5@1.0.0/lib/p5.min.js"></script>
+    </head>
+    <body>
+<script>
+let w, h, position, size
+const tunnelDepth=350
+const derivatives=[]
+
+function Derivative(i){
+    return createVector(-size*(noise(i/50)-0.5),
+                         size*(noise(i/50+1000)-0.5),
+                        -size/3*(noise(i/50+2000)))
+                        .normalize().mult(1.6)
+}
+
+function setup(){
+    size=min(displayWidth,displayHeight)
+    createCanvas(w=displayWidth,h=displayHeight,WEBGL)
+    for(let i=0;i<tunnelDepth;++i)
+        derivatives.push(Derivative(i))
+    position=createVector(0,0,0)
+}
+
+let t=tunnelDepth
+function draw(){
+    background(0)
+    noStroke()
+    pointLight(color(192),position)
+    let up=createVector(0,0,0)
+    for(const d of derivatives) up.add(d)
+    camera(position.x,
+           position.y,
+           position.z+h/20/(tan(PI/6)),
+           ...(position.array()),
+           ...(up.mult(-1).normalize().array()))
+    const cursor=position.copy()  
+    for(const d of derivatives){
+        const v=cursor.add(d)
+        push()
+        translate(v)
+        ambientMaterial(255*noise(v.z/100),
+                        255*noise(v.z/100+8000),
+                        255*noise(v.z/100+3000))
+        torus(size/8,1,70,5)
+        pop()
+    }
+    position.add(derivatives[0])
+    derivatives.shift()
+    derivatives.push(Derivative(t))
+    t+=1
+}
+
+</script>
+    </body>
+</html>
+
