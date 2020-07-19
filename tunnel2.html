@@ -1,0 +1,84 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Let's learn P5</title>
+        <script src="https://cdn.jsdelivr.net/npm/p5@1.0.0/lib/p5.min.js"></script>
+    </head>
+    <body>
+<script>
+
+let w, h, position, size
+const tunnelDepth=100
+const derivatives=[]
+
+function Ring(previous,position,radius){
+    beginShape(TRIANGLE_STRIP)
+    for(let angle=0;angle<=TWO_PI;angle+=TWO_PI/36){
+        const x=cos(angle)*radius
+        const y=sin(angle)*radius
+        const u=floor((1.7)*angle*radius)%img.width
+        vertex(position.x+x,
+               position.y+y,
+               position.z,
+               u,
+               floor(abs(position.z))%(0.6*img.height))
+        vertex(previous.x+x,
+               previous.y+y,
+               previous.z,
+               u,
+               floor(abs(previous.z))%(0.6*img.height))
+        
+    }
+    endShape()
+}
+
+function Derivative(i){
+    return createVector(-size*(noise(i/50)-0.5),
+                         size*(noise(i/50+1000)-0.5),
+                        -size*(noise(i/50+2000)))
+                        .normalize().mult(16)
+}
+
+function preload(){
+    img=loadImage("https://upload.wikimedia.org/wikipedia/en/d/d2/WhiteRabbit.jpg")
+}
+
+function setup(){
+    size=min(displayWidth,displayHeight)
+    createCanvas(w=displayWidth,h=displayHeight,WEBGL)
+    for(let i=0;i<tunnelDepth;++i)
+        derivatives.push(Derivative(i))
+    position=createVector(0,0,0)
+}
+
+let t=tunnelDepth
+function draw(){
+    background(0)
+    let up=createVector(0,0,0)
+    noStroke()
+    for(const d of derivatives) up.add(d)
+    camera(position.x,
+           position.y,
+           position.z+h/20/(tan(PI/6)),
+           ...(position.array()),
+           ...(up.mult(-1).normalize().array()))
+           
+    const cursor=position.copy() 
+    texture(img)
+    for(const d of derivatives){
+        const previous=cursor.copy()
+        cursor.add(d)
+        Ring(previous,cursor,size/8)
+    }
+    position.add(derivatives[0])
+    derivatives.shift()
+    derivatives.push(Derivative(t))
+    t+=1
+}
+
+
+
+</script>
+    </body>
+</html>
